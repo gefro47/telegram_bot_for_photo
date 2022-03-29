@@ -144,7 +144,6 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
         val bottomSheet: View = findViewById(R.id.bottom_sheet)
 
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         bottomSheetBehavior.setBottomSheetCallback(object: BottomSheetBehavior.BottomSheetCallback(){
             override fun onStateChanged(bottomSheet: View, state: Int) {
                 print(state)
