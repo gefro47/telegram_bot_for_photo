@@ -22,14 +22,13 @@ import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Size
-import android.view.Gravity
-import android.view.Surface
-import android.view.TextureView
-import android.view.WindowManager
+import android.view.*
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.elbekD.bot.Bot
@@ -37,29 +36,31 @@ import com.elbekD.bot.types.Message
 import com.example.telegrambotforphoto.model.ChatId
 import com.example.telegrambotforphoto.model.ListChatId
 import com.example.telegrambotforphoto.model.Token
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.bottom_sheet.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
+private lateinit var textureView: TextureView
+private lateinit var cameraId: String
+private lateinit var backgroundHandlerThread: HandlerThread
+private lateinit var backgroundHandler: Handler
+private lateinit var cameraManager: CameraManager
+private lateinit var cameraDevice: CameraDevice
+private lateinit var captureRequestBuilder: CaptureRequest.Builder
+private lateinit var cameraCaptureSession: CameraCaptureSession
+private lateinit var imageReader: ImageReader
+private lateinit var previewSize: Size
+private lateinit var videoSize: Size
+private var shouldProceedWithOnResume: Boolean = true
 
 class  MainActivity(val token: Token? = null) : AppCompatActivity() {
 
     val TAG = MainActivity::class.simpleName
     val CAMERA_REQUEST_RESULT = 1
 
-    private lateinit var textureView: TextureView
-    private lateinit var cameraId: String
-    private lateinit var backgroundHandlerThread: HandlerThread
-    private lateinit var backgroundHandler: Handler
-    private lateinit var cameraManager: CameraManager
-    private lateinit var cameraDevice: CameraDevice
-    private lateinit var captureRequestBuilder: CaptureRequest.Builder
-    private lateinit var cameraCaptureSession: CameraCaptureSession
-    private lateinit var imageReader: ImageReader
-    private lateinit var previewSize: Size
-    private lateinit var videoSize: Size
-    private var shouldProceedWithOnResume: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -138,6 +139,24 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
         } else if (!textureView.isAvailable){
             textureView.surfaceTextureListener = surfaceTextureListener
         }
+
+        val bottomSheetBehavior: BottomSheetBehavior<*>?
+        val bottomSheet: View = findViewById(R.id.bottom_sheet)
+
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        bottomSheetBehavior.setBottomSheetCallback(object: BottomSheetBehavior.BottomSheetCallback(){
+            override fun onStateChanged(bottomSheet: View, state: Int) {
+                print(state)
+                when (state) {
+                    BottomSheetBehavior.STATE_HIDDEN -> {
+                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    }
+                }
+            }
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+            }
+        })
 
         val Token = readUserStatus()?: token?.token
 
