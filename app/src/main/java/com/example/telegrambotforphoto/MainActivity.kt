@@ -36,6 +36,7 @@ import com.elbekD.bot.types.Message
 import com.example.telegrambotforphoto.model.ChatId
 import com.example.telegrambotforphoto.model.ListChatId
 import com.example.telegrambotforphoto.model.Token
+import com.example.telegrambotforphoto.utilits.ClientRecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
@@ -140,6 +141,8 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
             textureView.surfaceTextureListener = surfaceTextureListener
         }
 
+        readUsersListChatId()?.let { ClientRecyclerView(applicationContext).setData(it) }
+
         val bottomSheetBehavior: BottomSheetBehavior<*>?
         val bottomSheet: View = findViewById(R.id.bottom_sheet)
 
@@ -184,7 +187,20 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
             }
             bot.onCommand("/add") { msg, _ ->
                 runOnUiThread {
-                    basicAlert(msg, bot)
+                    val listOfChatId = mutableListOf<Long>()
+                    val ListChatId = readUsersListChatId()
+                    if(ListChatId != null) {
+                        for (i in ListChatId.indices){
+                            listOfChatId.add(ListChatId[i].chatId)
+                        }
+                        if (listOfChatId.contains(msg.chat.id)) {
+                            bot.sendMessage(msg.chat.id, "You`re already added!")
+                        } else {
+                            basicAlert(msg, bot)
+                        }
+                    }else {
+                        basicAlert(msg, bot)
+                    }
                 }
             }
             bot.start()
@@ -201,7 +217,8 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
             setMessage("Add client ${msg.from}?")
             setCancelable(false)
             setPositiveButton("Yes") { dialog, id ->
-                writeDataChatId(ListChatId(mutableListOf(ChatId(msg.chat.id, msg.chat.first_name.toString(),msg.chat.last_name.toString()))))
+                writeDataChatId(ListChatId(mutableListOf(ChatId(msg.chat.id, msg.chat.first_name.toString(),msg.chat.last_name.toString(), "@${msg.chat.username.toString()}"))))
+                readUsersListChatId()?.let { ClientRecyclerView(applicationContext).setData(it) }
                 bot.sendMessage(msg.chat.id, "You`re added!")
             }
             setNegativeButton("No") { dialog, id ->

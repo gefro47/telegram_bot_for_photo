@@ -25,14 +25,15 @@
             />
 
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/client_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@+id/status"
-            android:layout_marginTop="10dp" />
+            android:layout_marginTop="10dp"
+            tools:listitem="@layout/client_item" />
     </RelativeLayout>
 
 
     <include layout="@layout/bottom_sheet"
-        app:layout_constraintBottom_toBottomOf="parent"
-        />
+        app:layout_constraintBottom_toBottomOf="parent" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
