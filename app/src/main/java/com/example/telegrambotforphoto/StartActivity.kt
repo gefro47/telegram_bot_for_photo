@@ -1,6 +1,5 @@
 package com.example.telegrambotforphoto
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.telegrambotforphoto.model.Token
@@ -14,8 +13,8 @@ class StartActivity() : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (readUserStatus() != null){
-            edit_text.setText(readUserStatus())
+        if (readTokenId() != null){
+            edit_text.setText(readTokenId())
             checkBox.isChecked = true
         }else{
             showToast("Enter token!")
@@ -25,7 +24,7 @@ class StartActivity() : AppCompatActivity() {
             if (edit_text.text.toString() != ""
             ){
                 if (checkBox.isChecked){
-                    writeDataDemoStatus(Token(edit_text.text.toString()))
+                    writeTokenId(Token(edit_text.text.toString()))
                     BOOLEAN = true
                     replaceActivity(MainActivity())
                 }else{

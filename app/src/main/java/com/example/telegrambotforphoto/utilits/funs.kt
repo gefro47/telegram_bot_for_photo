@@ -2,6 +2,8 @@ package com.example.telegrambotforphoto
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -9,8 +11,10 @@ import com.example.telegrambotforphoto.model.ChatId
 import com.example.telegrambotforphoto.model.ListChatId
 import com.example.telegrambotforphoto.model.Token
 import com.google.gson.Gson
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 
 @SuppressLint("StaticFieldLeak")
 lateinit var APP_ACTIVITY: MainActivity
@@ -22,7 +26,7 @@ fun AppCompatActivity.replaceActivity(activity: AppCompatActivity){
     this.finish()
 }
 
-fun writeDataDemoStatus(token: Token) {
+fun writeTokenId(token: Token) {
     val path = APP_ACTIVITY.filesDir
     val file = File(path, "Token.txt")
     if (file.isFile) {
@@ -38,12 +42,12 @@ fun writeDataDemoStatus(token: Token) {
                 if (token.token != tokenFromFile.token) {
                     val newToken = Token(token.token)
                     file.delete()
-                    writeDataDemoStatus(newToken)
+                    writeTokenId(newToken)
                 }
             } catch (e: Exception) {
                 Log.d("e", e.toString())
                 file.delete()
-                writeDataDemoStatus(token)
+                writeTokenId(token)
             }
         }
     } else {
@@ -52,7 +56,7 @@ fun writeDataDemoStatus(token: Token) {
     }
 }
 
-fun readUserStatus(): String? {
+fun readTokenId(): String? {
     val path = APP_ACTIVITY.filesDir
     val file = File(path, "Token.txt")
     if (file.isFile) {
@@ -122,4 +126,44 @@ fun readUsersListChatId(): MutableList<ChatId>? {
 
 fun showToast(message: String){
     Toast.makeText(APP_ACTIVITY, message, Toast.LENGTH_SHORT).show()
+}
+
+
+fun Bitmap.rotate(degrees:Float = 180F): Bitmap?{
+    val matrix = Matrix()
+    matrix.postRotate(degrees)
+
+    return Bitmap.createBitmap(
+        this, // source bitmap
+        0, // x coordinate of the first pixel in source
+        0, // y coordinate of the first pixel in source
+        width, // The number of pixels in each row
+        height, // The number of rows
+        matrix, // Optional matrix to be applied to the pixels
+        false // true if the source should be filtered
+    )
+}
+
+fun bitmapToFile(bitmap: Bitmap, fileNameToSave: String): File? { // File name like "image.png"
+    //create a file to write bitmap data
+    var file: File? = null
+    return try {
+        file = File(APP_ACTIVITY.filesDir.toString() + File.separator + fileNameToSave)
+        file.createNewFile()
+
+        //Convert bitmap to byte array
+        val bos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos) // YOU can also save it in JPEG
+        val bitmapdata = bos.toByteArray()
+
+        //write the bytes in file
+        val fos = FileOutputStream(file)
+        fos.write(bitmapdata)
+        fos.flush()
+        fos.close()
+        file
+    } catch (e: Exception) {
+        e.printStackTrace()
+        file // it will return null
+    }
 }
