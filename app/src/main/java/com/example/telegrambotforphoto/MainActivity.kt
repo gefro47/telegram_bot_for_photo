@@ -9,17 +9,18 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.OrientationEventListener
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
@@ -35,6 +36,7 @@ import kotlinx.android.synthetic.main.bottom_sheet.*
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 class  MainActivity(val token: Token? = null) : AppCompatActivity() {
 
@@ -109,6 +111,11 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
             // Preview
+            val displayMetrics = DisplayMetrics()
+            windowManager.defaultDisplay.getMetrics(displayMetrics)
+            val width = displayMetrics.widthPixels
+            viewFinder.layoutParams.width = width
+            viewFinder.layoutParams.height = (1.7*width).toInt()
             val preview = Preview.Builder()
                 .build()
                 .also {
@@ -230,12 +237,12 @@ class  MainActivity(val token: Token? = null) : AppCompatActivity() {
                 runOnUiThread {
                     val listOfChatId = mutableListOf<Long>()
                     val ListChatId = readUsersListChatId()
-                    val texture = rotationKek.value?.let { viewFinder.bitmap!!.rotate(it) }
                     if(ListChatId != null) {
                         for (i in ListChatId.indices){
                             listOfChatId.add(ListChatId[i].chatId)
                         }
                         if (listOfChatId.contains(msg.chat.id)) {
+                            val texture = rotationKek.value?.let { viewFinder.bitmap!!.rotate(it) }
                             bot.sendPhoto(msg.chat.id, bitmapToFile(texture!!, "kek.png")!!)
                         } else {
                             bot.sendMessage(msg.chat.id, "It`s private chat!")
