@@ -3,12 +3,9 @@ package com.example.telegrambotforphoto.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.telegrambotforphoto.R
 import com.example.telegrambotforphoto.model.ChatId
-import com.example.telegrambotforphoto.model.ListChatId
 import kotlinx.android.synthetic.main.client_item.view.*
 
 class ClientAdapter : RecyclerView.Adapter<ClientAdapter.MyViewHolder>() {

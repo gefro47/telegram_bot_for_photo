@@ -29,13 +29,11 @@ class StartActivity() : AppCompatActivity() {
                     replaceActivity(MainActivity())
                 }else{
                     BOOLEAN = true
-                    replaceActivity(MainActivity(Token(edit_text.text.toString())))
+                    replaceActivity(MainActivity())
                 }
             }else{
                 showToast("Enter token!")
             }
         }
-
-
     }
 }

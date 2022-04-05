@@ -1,12 +1,25 @@
 package com.example.telegrambotforphoto
 
+import android.R
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.Matrix
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import com.example.telegrambotforphoto.model.ChatId
 import com.example.telegrambotforphoto.model.ListChatId
 import com.example.telegrambotforphoto.model.Token
@@ -15,10 +28,14 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import kotlin.system.exitProcess
+
 
 @SuppressLint("StaticFieldLeak")
 lateinit var APP_ACTIVITY: MainActivity
 var BOOLEAN = false
+lateinit var shared : SharedPreferences
+const val namePreferences = "TelegramBot"
 
 fun AppCompatActivity.replaceActivity(activity: AppCompatActivity){
     val intent = Intent(this, activity::class.java)

@@ -24,6 +24,16 @@
             app:layout_constraintTop_toTopOf="parent"
             />
 
+        <ImageView
+            android:id="@+id/preferences_of_bot"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_settings"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            app:tint="@color/colorObjectBlue" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/client_recycler_view"
             android:layout_width="match_parent"

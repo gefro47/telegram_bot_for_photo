@@ -9,4 +9,5 @@
     <item name="colorOnSecondary" type="color">#CCDAD9D9</item>
 
     <item name="colorStatusBar" type="color">#000000</item>
+    <item name="colorObjectBlue" type="color">#3897BC</item>
 </resources>
