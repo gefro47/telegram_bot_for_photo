@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="colorPrimary" type="color">#000000</item>
-    <item name="colorPrimaryVariant" type="color">#000000</item>
+    <item name="colorPrimaryVariant" type="color">#99000000</item>
     <item name="colorOnPrimary" type="color">#FFFFFFFF</item>
 
     <item name="colorSecondary" type="color">#CC191919</item>
-    <item name="colorSecondaryVariant" type="color">#CC191919</item>
+    <item name="colorSecondaryVariant" type="color">#99191919</item>
     <item name="colorOnSecondary" type="color">#CCDAD9D9</item>
 
     <item name="colorStatusBar" type="color">#000000</item>

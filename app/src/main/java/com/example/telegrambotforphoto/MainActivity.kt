@@ -29,12 +29,16 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.MutableLiveData
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.elbekD.bot.Bot
 import com.elbekD.bot.types.Message
 import com.example.telegrambotforphoto.activities.AppCompatPreferenceActivity
+import com.example.telegrambotforphoto.adapters.ClientAdapter
 import com.example.telegrambotforphoto.model.ChatId
 import com.example.telegrambotforphoto.model.ListChatId
-import com.example.telegrambotforphoto.utilits.ClientRecyclerView
+//import com.example.telegrambotforphoto.utilits.ClientRecyclerView
+import com.example.telegrambotforphoto.utilits.DataBaseHelper
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
@@ -44,10 +48,12 @@ import java.util.concurrent.Executors
 
 
 class  MainActivity : AppCompatActivity() {
-
+    private val listChatId = arrayListOf<ChatId>()
+    private val adapter = ClientAdapter(listChatId)
     private var imageCapture: ImageCapture? = null
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var alertDialog: AlertDialog.Builder
     private val charge = 20
     private val token = MutableLiveData<String>()
 
@@ -62,8 +68,9 @@ class  MainActivity : AppCompatActivity() {
         booleanHigh.value = true
         token.value = shared.getString("token", "")
         val token = token.value
+        alertDialog = AlertDialog.Builder(this)
         if (token == "" || token == null) {
-            showCustomDialogToken(APP_ACTIVITY)
+            showCustomDialogToken()
         }
 
 
@@ -175,21 +182,25 @@ class  MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     override fun onResume() {
         super.onResume()
+        alertDialog = AlertDialog.Builder(this)
         val rotationKek = MutableLiveData<Float>()
+        rotationKek.value = 0F
+        listChatId.addAll(getList())
         shared.registerOnSharedPreferenceChangeListener { _, key ->
             if (key == "token") {
                 token.value = shared.getString("token", "")
                 battery()
                 telegramBot(rotationKek)
-                showToast("keka1")
             }
         }
+        val recyclerView = this.findViewById<RecyclerView>(R.id.client_recycler_view)
+        recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.setHasFixedSize(true)
         if (token.value != "" || token.value != null){
             battery()
             telegramBot(rotationKek)
         }
-        readUsersListChatId()?.let { ClientRecyclerView(applicationContext).setData(it) }
-
         val bottomSheetBehavior: BottomSheetBehavior<*>?
         val bottomSheet: View = findViewById(R.id.bottom_sheet)
 
@@ -207,7 +218,7 @@ class  MainActivity : AppCompatActivity() {
             }
         })
 
-        val orientationEventListener = object : OrientationEventListener(this as Context) {
+        val orientationEventListener = object : OrientationEventListener(APP_ACTIVITY) {
             override fun onOrientationChanged(orientation: Int) {
                 val rotation: Float = when (orientation) {
                     in 45..134 -> 90F
@@ -228,38 +239,30 @@ class  MainActivity : AppCompatActivity() {
             val bot = Bot.createPolling("", Token)
             bot.start()
             bot.onCommand("/photo") { msg, _ ->
-                runOnUiThread {
-                    val listOfChatId = mutableListOf<Long>()
-                    val ListChatId = readUsersListChatId()
-                    if(ListChatId != null) {
-                        for (i in ListChatId.indices){
-                            listOfChatId.add(ListChatId[i].chatId)
-                        }
-                        if (listOfChatId.contains(msg.chat.id)) {
-                            val texture = rotationKek.value?.let { viewFinder.bitmap!!.rotate(it) }
-                            bot.sendPhoto(msg.chat.id, bitmapToFile(texture!!, "kek.png")!!)
-                        } else {
-                            bot.sendMessage(msg.chat.id, "It`s private chat!")
-                        }
-                    }else {
-                        bot.sendMessage(msg.chat.id, "It`s private chat!")
+                val list = getList()
+                val listOfChatId = mutableListOf<Long>()
+                for (i in list.indices){
+                    listOfChatId.add(list[i].chatId)
+                }
+                if (listOfChatId.contains(msg.chat.id)) {
+                    runOnUiThread {
+                        val texture = viewFinder.bitmap!!.rotate(rotationKek.value!!)
+                        bot.sendPhoto(msg.chat.id, bitmapToFile(texture!!, "kek.png")!!)
                     }
+                } else {
+                    bot.sendMessage(msg.chat.id, "It`s private chat!")
                 }
             }
             bot.onCommand("/add") { msg, _ ->
-                runOnUiThread {
-                    val listOfChatId = mutableListOf<Long>()
-                    val ListChatId = readUsersListChatId()
-                    if(ListChatId != null) {
-                        for (i in ListChatId.indices){
-                            listOfChatId.add(ListChatId[i].chatId)
-                        }
-                        if (listOfChatId.contains(msg.chat.id)) {
-                            bot.sendMessage(msg.chat.id, "You`re already added!")
-                        } else {
-                            showCustomDialogAdd(msg, bot)
-                        }
-                    }else {
+                val list = getList()
+                val listOfChatId = mutableListOf<Long>()
+                for (i in list.indices){
+                    listOfChatId.add(list[i].chatId)
+                }
+                if (listOfChatId.contains(msg.chat.id)) {
+                    bot.sendMessage(msg.chat.id, "You`re already added!")
+                } else {
+                    runOnUiThread {
                         showCustomDialogAdd(msg, bot)
                     }
                 }
@@ -268,7 +271,7 @@ class  MainActivity : AppCompatActivity() {
     }
 
     private fun showCustomDialogAdd(msg: Message, bot: Bot) {
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(APP_ACTIVITY)
             .create()
         val view = layoutInflater.inflate(R.layout.dialog_for_add_client,null)
         val buttonCancel = view.findViewById<Button>(R.id.btn_cancel)
@@ -290,8 +293,11 @@ class  MainActivity : AppCompatActivity() {
             builder.dismiss()
         }
         buttonOk.setOnClickListener {
-            writeDataChatId(ListChatId(mutableListOf(ChatId(msg.chat.id, msg.chat.first_name.toString(),msg.chat.last_name.toString(), "@${msg.chat.username.toString()}"))))
-            readUsersListChatId()?.let { ClientRecyclerView(applicationContext).setData(it) }
+            val db = DataBaseHelper(this, null)
+            db.addClient(ChatId(msg.chat.id, msg.chat.first_name.toString(),msg.chat.last_name.toString(), "@${msg.chat.username.toString()}"))
+            val index = listChatId.lastIndex + 1
+            listChatId.add(index, db.getClientByNickname("@${msg.chat.username.toString()}")!!)
+            adapter.notifyItemInserted(index)
             bot.sendMessage(msg.chat.id, "You`re added!")
             builder.dismiss()
         }
@@ -300,8 +306,8 @@ class  MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("CommitPrefEdits")
-    private fun showCustomDialogToken(context: Context) {
-        val builder = AlertDialog.Builder(context)
+    private fun showCustomDialogToken() {
+        val builder = alertDialog
             .create()
         val view = layoutInflater.inflate(R.layout.dialog_for_add_token,null)
         val buttonCancel = view.findViewById<Button>(R.id.btn_cancel)
@@ -374,5 +380,10 @@ class  MainActivity : AppCompatActivity() {
 
         // register the broadcast receiver
         registerReceiver(receiver, filter)
+    }
+
+    private fun getList(): ArrayList<ChatId> {
+        val db = DataBaseHelper(this, null)
+        return db.getAll()
     }
 }

@@ -22,7 +22,7 @@ class AppCompatPreferenceActivity : AppCompatActivity(){
         setContentView(R.layout.settings_activity)
         shared = getSharedPreferences(namePreferences , Context.MODE_PRIVATE)
         token_pref_view.setOnClickListener {
-            showCustomDialogToken(this)
+            showCustomDialogToken()
         }
     }
 
@@ -31,8 +31,8 @@ class AppCompatPreferenceActivity : AppCompatActivity(){
     }
 
     @SuppressLint("CommitPrefEdits")
-    fun showCustomDialogToken(context: Context) {
-        val builder = AlertDialog.Builder(context)
+    fun showCustomDialogToken() {
+        val builder = AlertDialog.Builder(this)
             .create()
         val view = layoutInflater.inflate(R.layout.dialog_for_add_token,null)
         val buttonCancel = view.findViewById<Button>(R.id.btn_cancel)

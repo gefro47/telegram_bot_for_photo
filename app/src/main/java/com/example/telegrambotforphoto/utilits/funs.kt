@@ -146,7 +146,7 @@ fun showToast(message: String){
 }
 
 
-fun Bitmap.rotate(degrees:Float = 180F): Bitmap?{
+fun Bitmap.rotate(degrees:Float): Bitmap?{
     val matrix = Matrix()
     matrix.postRotate(degrees)
 

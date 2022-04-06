@@ -22,9 +22,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TelegramBotForPhoto">
         <activity
-            android:name=".StartActivity"
-            android:exported="true" />
-        <activity
             android:name=".activities.AppCompatPreferenceActivity"
             android:exported="true" />
         <activity

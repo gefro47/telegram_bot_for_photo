@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="colorPrimary" type="color">#FFFFFFFF</item>
-    <item name="colorPrimaryVariant" type="color">#FFFFFFFF</item>
+    <item name="colorPrimaryVariant" type="color">#99FFFFFF</item>
     <item name="colorOnPrimary" type="color">#000000</item>
 
     <item name="colorSecondary" type="color">#CCB5B5B5</item>
-    <item name="colorSecondaryVariant" type="color">#CCB5B5B5</item>
+    <item name="colorSecondaryVariant" type="color">#99B5B5B5</item>
     <item name="colorOnSecondary" type="color">#CC363636</item>
 </resources>
