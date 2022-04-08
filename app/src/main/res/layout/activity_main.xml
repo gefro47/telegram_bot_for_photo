@@ -10,39 +10,13 @@
     tools:context=".MainActivity"
     android:id="@+id/main">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <TextView
-            android:id="@+id/status"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:textColor="?attr/colorSecondary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            />
-
-        <ImageView
-            android:id="@+id/preferences_of_bot"
-            android:layout_alignParentEnd="true"
-            android:src="@drawable/ic_settings"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:tint="@color/colorObjectBlue" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/client_recycler_view"
+        <androidx.camera.view.PreviewView
+            android:id="@+id/viewFinder"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/status"
-            android:layout_marginTop="10dp"
-            tools:listitem="@layout/client_item" />
-    </RelativeLayout>
-
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     <include layout="@layout/bottom_sheet"
         app:layout_constraintBottom_toBottomOf="parent" />

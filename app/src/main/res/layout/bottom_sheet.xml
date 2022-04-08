@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
 xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     app:behavior_hideable="true"
     app:behavior_peekHeight="66dp"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/bottom_sheet"
     style="@style/CustomCardViewStyle"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="5dp">
 
         <ImageView
             app:layout_constraintTop_toTopOf="parent"
@@ -27,19 +29,46 @@ xmlns:app="http://schemas.android.com/apk/res-auto"
             app:layout_constraintTop_toBottomOf="@+id/image"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="20dp"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="10dp">
 
-                <androidx.camera.view.PreviewView
-                    android:id="@+id/viewFinder"
-                    android:layout_width="match_parent"
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorSecondary">
+                <TextView
+                    android:id="@+id/status"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:textColor="?attr/colorSecondary"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    />
+
+                <ImageView
+                    android:id="@+id/preferences_of_bot"
+                    android:layout_alignParentEnd="true"
+                    android:src="@drawable/ic_security_token"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:tint="@color/colorObjectBlue" />
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/client_recycler_view"
+                    android:layout_below="@id/preferences_of_bot"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="10dp"
+                    tools:listitem="@layout/client_item" />
+            </RelativeLayout>
 
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>

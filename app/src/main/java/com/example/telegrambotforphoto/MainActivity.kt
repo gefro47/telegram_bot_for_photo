@@ -21,8 +21,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.AspectRatio.RATIO_16_9
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
@@ -33,14 +35,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.elbekD.bot.Bot
 import com.elbekD.bot.types.Message
-import com.example.telegrambotforphoto.activities.AppCompatPreferenceActivity
 import com.example.telegrambotforphoto.adapters.ClientAdapter
+import com.example.telegrambotforphoto.databinding.ActivityMainBinding
 import com.example.telegrambotforphoto.model.ChatId
-import com.example.telegrambotforphoto.model.ListChatId
-//import com.example.telegrambotforphoto.utilits.ClientRecyclerView
 import com.example.telegrambotforphoto.utilits.DataBaseHelper
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.android.synthetic.main.activity_main.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior.*
 import kotlinx.android.synthetic.main.bottom_sheet.*
 import java.io.File
 import java.util.concurrent.ExecutorService
@@ -48,7 +48,9 @@ import java.util.concurrent.Executors
 
 
 class  MainActivity : AppCompatActivity() {
+    private lateinit var viewBinding: ActivityMainBinding
     private val listChatId = arrayListOf<ChatId>()
+    private val listOfAdded = arrayListOf<Long>()
     private val adapter = ClientAdapter(listChatId)
     private var imageCapture: ImageCapture? = null
     private lateinit var outputDirectory: File
@@ -62,6 +64,9 @@ class  MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
+        supportActionBar?.hide()
         APP_ACTIVITY=this
         shared = getSharedPreferences(namePreferences , Context.MODE_PRIVATE)
         booleanLow.value = true
@@ -74,8 +79,6 @@ class  MainActivity : AppCompatActivity() {
         }
 
 
-        setContentView(R.layout.activity_main)
-        supportActionBar?.hide()
 
         // Check camera permissions if all permission granted
         // start camera else ask for the permission
@@ -86,11 +89,8 @@ class  MainActivity : AppCompatActivity() {
         }
 
         preferences_of_bot.setOnClickListener{
-            replaceActivity(AppCompatPreferenceActivity())
+            showCustomDialogToken()
         }
-
-        outputDirectory = getOutputDirectory()
-        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
     private fun startCamera() {
@@ -99,18 +99,15 @@ class  MainActivity : AppCompatActivity() {
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
             // Preview
-            val displayMetrics = DisplayMetrics()
-            windowManager.defaultDisplay.getMetrics(displayMetrics)
-            val width = displayMetrics.widthPixels
-            viewFinder.layoutParams.width = width
-            viewFinder.layoutParams.height = (1.7*width).toInt()
             val preview = Preview.Builder()
+                .setTargetAspectRatio(RATIO_16_9)
                 .build()
                 .also {
-                    it.setSurfaceProvider(viewFinder.surfaceProvider)
+                    it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
             imageCapture = ImageCapture
                 .Builder()
+                .setTargetAspectRatio(RATIO_16_9)
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .build()
             // Select back camera as a default
@@ -182,9 +179,14 @@ class  MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     override fun onResume() {
         super.onResume()
+        val bottomSheetBehavior: BottomSheetBehavior<*>?
+        val bottomSheet: View = findViewById(R.id.bottom_sheet)
+        outputDirectory = getOutputDirectory()
+        cameraExecutor = Executors.newSingleThreadExecutor()
         alertDialog = AlertDialog.Builder(this)
         val rotationKek = MutableLiveData<Float>()
         rotationKek.value = 0F
+        listChatId.clear()
         listChatId.addAll(getList())
         shared.registerOnSharedPreferenceChangeListener { _, key ->
             if (key == "token") {
@@ -197,20 +199,23 @@ class  MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.setHasFixedSize(true)
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val width = displayMetrics.widthPixels
+        recyclerView.layoutParams.width = width
+        recyclerView.layoutParams.height = (1.7*width).toInt()
         if (token.value != "" || token.value != null){
             battery()
             telegramBot(rotationKek)
         }
-        val bottomSheetBehavior: BottomSheetBehavior<*>?
-        val bottomSheet: View = findViewById(R.id.bottom_sheet)
 
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
-        bottomSheetBehavior.setBottomSheetCallback(object: BottomSheetBehavior.BottomSheetCallback(){
+        bottomSheetBehavior = from(bottomSheet)
+        bottomSheetBehavior.setBottomSheetCallback(object: BottomSheetCallback(){
             override fun onStateChanged(bottomSheet: View, state: Int) {
                 print(state)
                 when (state) {
-                    BottomSheetBehavior.STATE_HIDDEN -> {
-                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+                    STATE_HIDDEN -> {
+                        bottomSheetBehavior.state = STATE_COLLAPSED
                     }
                 }
             }
@@ -246,8 +251,24 @@ class  MainActivity : AppCompatActivity() {
                 }
                 if (listOfChatId.contains(msg.chat.id)) {
                     runOnUiThread {
-                        val texture = viewFinder.bitmap!!.rotate(rotationKek.value!!)
-                        bot.sendPhoto(msg.chat.id, bitmapToFile(texture!!, "kek.png")!!)
+                        try {
+                            val photoFile = File(outputDirectory, "keka.jpg")
+                            val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+                            imageCapture?.takePicture(
+                                outputOptions,
+                                ContextCompat.getMainExecutor(APP_ACTIVITY),
+                                object : ImageCapture.OnImageSavedCallback {
+                                    override fun onError(exc: ImageCaptureException) {
+                                        Log.e("Keka", "Photo capture failed: ${exc.message}", exc)
+                                    }
+
+                                    override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+                                        bot.sendPhoto(msg.chat.id, photoFile)
+                                    }
+                                })
+                        }catch (e: java.lang.Exception){
+                            Log.i("Keka", e.message.toString())
+                        }
                     }
                 } else {
                     bot.sendMessage(msg.chat.id, "It`s private chat!")
@@ -277,18 +298,20 @@ class  MainActivity : AppCompatActivity() {
         val buttonCancel = view.findViewById<Button>(R.id.btn_cancel)
         val buttonOk = view.findViewById<Button>(R.id.btn_ok)
         val answer = view.findViewById<TextView>(R.id.answer_text_view)
-        builder.apply {
-            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setView(view)
-            setCancelable(false)
-        }.show()
+        if (!listOfAdded.contains(msg.chat.id)) {
+            builder.apply {
+                window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                setView(view)
+                setCancelable(false)
+            }.show()
+        }else{
+            return
+        }
+        listOfAdded.add(msg.chat.id)
         answer.text = "Add client ${msg.chat.first_name} ${msg.chat.last_name} @${msg.chat.username}?"
         builder.setView(view)
         buttonCancel.setOnClickListener {
-            Toast.makeText(
-                APP_ACTIVITY, "Perhaps you`re right",
-                Toast.LENGTH_LONG
-            ).show()
+            showToast("Perhaps you`re right")
             bot.sendMessage(msg.chat.id, "Decline!")
             builder.dismiss()
         }
@@ -351,10 +374,10 @@ class  MainActivity : AppCompatActivity() {
         val receiver: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.apply {
-                    val ListChatId = readUsersListChatId()
+                    val list = getList()
                     status.text = "Current battery charge\n$currentBatteryCharge%"
-                    if (!ListChatId.isNullOrEmpty()) {
-                        for (i in ListChatId) {
+                    if (!list.isNullOrEmpty()) {
+                        for (i in list) {
                             if (token != null) {
                                 if (currentBatteryCharge < charge && booleanLow.value == true) {
                                     booleanHigh.value = true

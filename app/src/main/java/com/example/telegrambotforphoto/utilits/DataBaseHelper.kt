@@ -92,18 +92,14 @@ class DataBaseHelper (context: Context, factory: SQLiteDatabase.CursorFactory?) 
     }
 
     fun deleteClientByNickname(nickname: String): Boolean {
-        try {
-            val query = "DELETE FROM $TABLE_NAME WHERE $NICKNAME_COL =  \"$nickname\""
+        return try {
             val db = this.writableDatabase
             val whereClause = "$NICKNAME_COL=?"
             val whereArgs = arrayOf(nickname)
             db.delete("$TABLE_NAME", whereClause, whereArgs)
-//            val cursor = db.rawQuery(query, null)
-//            cursor.close()
-//            db.close()
-            return true
+            true
         }catch (e: Exception){
-            return false
+            false
         }
     }
     fun getAll(): ArrayList<ChatId> {

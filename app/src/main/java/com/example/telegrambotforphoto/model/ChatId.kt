@@ -6,7 +6,3 @@ data class ChatId (
     val lastName: String,
     val nickname: String
 )
-
-data class ListChatId(
-    val listChatId: MutableList<ChatId>
-)
