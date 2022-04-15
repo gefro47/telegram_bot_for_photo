@@ -10,7 +10,7 @@ import com.example.telegrambotforphoto.model.ChatId
 import com.example.telegrambotforphoto.utilits.DataBaseHelper
 import kotlinx.android.synthetic.main.client_item.view.*
 
-class ClientAdapter(private val listChatId: ArrayList<ChatId>) : RecyclerView.Adapter<ClientAdapter.MyViewHolder>() {
+class ClientAdapter(private val listChatId: ArrayList<ChatId>, private val listOfAdded: ArrayList<Long>) : RecyclerView.Adapter<ClientAdapter.MyViewHolder>() {
 
     class MyViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
 
@@ -26,7 +26,7 @@ class ClientAdapter(private val listChatId: ArrayList<ChatId>) : RecyclerView.Ad
         holder.itemView.nickname.text = "${currentItem.nickname}"
         holder.itemView.delete_button.setOnClickListener(object : View.OnClickListener{
             override fun onClick(v: View?) {
-                deleteItem(listChatId.indexOf(currentItem), currentItem.nickname)
+                deleteItem(listChatId.indexOf(currentItem), currentItem)
             }
         })
     }
@@ -35,9 +35,10 @@ class ClientAdapter(private val listChatId: ArrayList<ChatId>) : RecyclerView.Ad
         return listChatId.size
     }
 
-    fun deleteItem(index: Int, nickname: String){
+    fun deleteItem(index: Int, currentItem: ChatId){
         listChatId.removeAt(index)
+        listOfAdded.remove(currentItem.chatId)
         val db = DataBaseHelper(APP_ACTIVITY, null)
-        if (db.deleteClientByNickname(nickname)) notifyItemRemoved(index)
+        if (db.deleteClientByNickname(currentItem.nickname)) notifyItemRemoved(index)
     }
 }

@@ -2,10 +2,7 @@ package com.example.telegrambotforphoto
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -13,8 +10,7 @@ import android.os.BatteryManager
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.OrientationEventListener
-import android.view.View
+import android.view.*
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -51,16 +47,32 @@ class  MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private val listChatId = arrayListOf<ChatId>()
     private val listOfAdded = arrayListOf<Long>()
-    private val adapter = ClientAdapter(listChatId)
+    private val adapter = ClientAdapter(listChatId, listOfAdded)
     private var imageCapture: ImageCapture? = null
     private lateinit var outputDirectory: File
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var alertDialog: AlertDialog.Builder
     private val charge = 20
     private val token = MutableLiveData<String>()
+    private val booleanDescription = MutableLiveData<Boolean>()
 
     private val booleanLow = MutableLiveData<Boolean>()
     private val booleanHigh = MutableLiveData<Boolean>()
+
+    private val orientationEventListener by lazy {
+        object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                val rotation = when (orientation) {
+                    in 45 until 135 -> Surface.ROTATION_270
+                    in 135 until 225 -> Surface.ROTATION_180
+                    in 225 until 315 -> Surface.ROTATION_90
+                    else -> Surface.ROTATION_0
+                }
+
+                imageCapture!!.targetRotation = rotation
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,13 +84,14 @@ class  MainActivity : AppCompatActivity() {
         booleanLow.value = true
         booleanHigh.value = true
         token.value = shared.getString("token", "")
+        booleanDescription.value = shared.getBoolean("description", false)
         val token = token.value
         alertDialog = AlertDialog.Builder(this)
         if (token == "" || token == null) {
             showCustomDialogToken()
         }
 
-
+        if (!booleanDescription.value!!) showCustomDialogDescription()
 
         // Check camera permissions if all permission granted
         // start camera else ask for the permission
@@ -90,6 +103,10 @@ class  MainActivity : AppCompatActivity() {
 
         preferences_of_bot.setOnClickListener{
             showCustomDialogToken()
+        }
+
+        application_info.setOnClickListener {
+            showCustomDialogDescription()
         }
     }
 
@@ -166,6 +183,7 @@ class  MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        orientationEventListener.disable()
         cameraExecutor.shutdown()
     }
 
@@ -184,17 +202,16 @@ class  MainActivity : AppCompatActivity() {
         outputDirectory = getOutputDirectory()
         cameraExecutor = Executors.newSingleThreadExecutor()
         alertDialog = AlertDialog.Builder(this)
-        val rotationKek = MutableLiveData<Float>()
-        rotationKek.value = 0F
         listChatId.clear()
         listChatId.addAll(getList())
-        shared.registerOnSharedPreferenceChangeListener { _, key ->
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == "token") {
                 token.value = shared.getString("token", "")
                 battery()
-                telegramBot(rotationKek)
+                telegramBot()
             }
         }
+        shared.registerOnSharedPreferenceChangeListener(listener)
         val recyclerView = this.findViewById<RecyclerView>(R.id.client_recycler_view)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -203,10 +220,10 @@ class  MainActivity : AppCompatActivity() {
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         val width = displayMetrics.widthPixels
         recyclerView.layoutParams.width = width
-        recyclerView.layoutParams.height = (1.7*width).toInt()
+        recyclerView.layoutParams.height = (1.4*width).toInt()
         if (token.value != "" || token.value != null){
             battery()
-            telegramBot(rotationKek)
+            telegramBot()
         }
 
         bottomSheetBehavior = from(bottomSheet)
@@ -222,22 +239,10 @@ class  MainActivity : AppCompatActivity() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
             }
         })
-
-        val orientationEventListener = object : OrientationEventListener(APP_ACTIVITY) {
-            override fun onOrientationChanged(orientation: Int) {
-                val rotation: Float = when (orientation) {
-                    in 45..134 -> 90F
-                    in 135..224 -> 180F
-                    in 225..314 -> 270F
-                    else -> 0F
-                }
-                rotationKek.value = rotation
-            }
-        }
         orientationEventListener.enable()
 
     }
-    private fun telegramBot(rotationKek: MutableLiveData<Float>){
+    private fun telegramBot(){
         val Token = token.value
 
         if (Token != null && Token != "") {
@@ -369,13 +374,36 @@ class  MainActivity : AppCompatActivity() {
         builder.show()
     }
 
+    private fun showCustomDialogDescription() {
+        val builder = alertDialog
+            .create()
+        val view = layoutInflater.inflate(R.layout.dialog_for_description,null)
+        val buttonOk = view.findViewById<Button>(R.id.btn_ok)
+        val text = view.findViewById<TextView>(R.id.text)
+        text.setText(R.string.description)
+        builder.apply {
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setView(view)
+            setCancelable(false)
+        }.show()
+        builder.setView(view)
+        buttonOk.setOnClickListener {
+            val edit = shared.edit()
+            edit.putBoolean("description", true)
+            edit.apply()
+            builder.dismiss()
+        }
+        builder.setCanceledOnTouchOutside(false)
+        builder.show()
+    }
+
     private fun battery(){
         val token = token.value
         val receiver: BroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.apply {
                     val list = getList()
-                    status.text = "Current battery charge\n$currentBatteryCharge%"
+//                    status.text = "Current battery charge\n$currentBatteryCharge%"
                     if (!list.isNullOrEmpty()) {
                         for (i in list) {
                             if (token != null) {
